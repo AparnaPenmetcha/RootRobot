@@ -2,6 +2,7 @@
 <head>
 <title>Root Webserver</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" type="text/css" href="styleSheet.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.9.0/css/all.css">
 <link rel="icon" href="https://avatars3.githubusercontent.com/u/36962859?s=200&v=4" type="image/png" sizes="16x16">
 </head>
@@ -64,6 +65,13 @@
 	</center>
 	</form>
 </aside>
+<aside style="float:left;width:320px;padding:10px;border:2px solid coral;height:501px;resize:none;overflow:auto;font: 400 11px system-ui;font-size: 16px;">
+	<div style="padding-bottom: 18px;color:coral;"><h>Sensor Log</h></div>
+	<div id='SensorLog' style="height:465px;resize:none;overflow:auto;font-family:monospace;
+    font-size:13px;">
+	<span>%s</span>
+	</div>
+</aside>
 <form id='reload'>
 	<input hidden type='submit' name='reload' value='True' tabindex='-1'>
 </form>
@@ -80,3 +88,7 @@
     document.getElementById("RateText").innerHTML = 
     'Turn Rate:'+document.getElementById("RateSetting").innerHTML;
 </script>
+ <script> // Automatically scroll the textbox to the bottom
+    var textarea = document.getElementById("SensorLog");
+    textarea.scrollTop = textarea.scrollHeight;
+ </script>

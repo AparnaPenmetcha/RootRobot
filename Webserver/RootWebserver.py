@@ -9,15 +9,17 @@ from time import sleep
 import gatt
 import threading
 import time,termios,tty,sys
+import datetime
 
 connected = False
-pageContent = open('RootWebserver.html').read()%(str(False),'0')+open('styleSheet.html').read()
+pageContent = open('RootWebserver.html').read()%(str(False),'0','')+open('styleSheet.html').read()
 rate = 0 # Set rate
+sensorData = ''
 
 def setPageContent():
-    global pageContent, rate
-    pageContent = open('RootWebserver.html').read()%(str(connected),str(rate))+open('styleSheet.html').read()
-    return pageContent, rate
+    global pageContent, rate, sensorData
+    pageContent = open('RootWebserver.html').read()%(str(connected),str(rate),sensorData)+open('styleSheet.html').read()
+    return pageContent, rate, sensorData
 
 def changeTurnRate(NewTurnRate):
    global rate
@@ -101,18 +103,31 @@ class RootDevice(gatt.Device):
         self.rx_characteristic.enable_notifications() # listen to RX messages
 
     def characteristic_value_updated(self, characteristic, value):
+        global sensorData
         message = []
         type = ""
         for byte in value:
             message.append(byte)
 #        print ("Messages from Root:")
-        if message[0] == 4: type = "Color Sensor"
-        if message[0] == 12: type = "Bumper"
-        if message[0] == 13: type = "Light Sensor"
-        if message[0] == 17: type = "Touch Sensor"
-        if message[0] == 20: type = "Cliff Sensor"
+        if message[0] == 4: 
+            type = "Color Sensor"; 
+            sensorData = sensorData + str(datetime.datetime.now().time()) + ': Color Sensor Triggered<br>'
+        if message[0] == 12: 
+            type = "Bumper"; 
+            sensorData = sensorData + str(datetime.datetime.now().time()) + ': Bumper Triggered<br>'
+        if message[0] == 13: 
+            type = "Light Sensor"; 
+            sensorData = sensorData + str(datetime.datetime.now().time()) + ': Light Sensor Triggered<br>'
+        if message[0] == 17: 
+            type = "Touch Sensor"; 
+            sensorData = sensorData + str(datetime.datetime.now().time()) + ': Touch Sensor Triggered<br>'
+        if message[0] == 20: 
+            type = "Cliff Sensor"; 
+            sensorData = sensorData + str(datetime.datetime.now().time()) + ': Cliff Sensor Triggered<br>'
 
         print(type, message)
+        # MyServer().do_POST() # Find a way to call MyServer.do_POST to post everytime a sensor is triggered
+        return sensorData
 
     def drive_forward(self):
         self.tx_characteristic.write_value([0x01, 0x04, 0x00, 0x00, 0x00, 0x00, 0x64, 0x00, 0x00, 0x00, 0x64, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xD1])
@@ -174,7 +189,7 @@ class MyServer(BaseHTTPRequestHandler):
         self.wfile.write(pageContent.encode("utf-8"))
 
     def do_POST(self):
-        global pageContent, manager, connected, thread, rate
+        global pageContent, manager, connected, thread, rate, sensorData
         angle = 0
         content_length = int(self.headers['Content-Length'])  # Get the size of data
         post_data = self.rfile.read(content_length).decode('utf-8')  # Get the data
@@ -225,7 +240,7 @@ class MyServer(BaseHTTPRequestHandler):
                 disconnectRoot()
         setPageContent()
         self._redirect('/')  # Redirect back to the root url
-        return pageContent, manager, connected, thread, rate
+        return pageContent, manager, connected, thread, rate, sensorData
 
 # Create Webserver
 if __name__ == '__main__':
